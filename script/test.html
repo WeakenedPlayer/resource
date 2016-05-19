@@ -6,6 +6,8 @@
 <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
 <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
 
+<script src="https://raw.githubusercontent.com/WeakenedPlayer/resource/master/script/marker.js"></script>
+
 <script>
 var continentSelector = undefined;
 var continentId = 0;
@@ -16,6 +18,8 @@ var tile = undefined;
 const continentName = ["indar", "amerish", "esamir"];
 const mapLength = 512.; // とりあえずこの値使う
 
+var displayedMarker = [];
+
 // 動けばよかろうなコード
 function tileUrlTemplate( i ){
 	return 'https://raw.githubusercontent.com/WeakenedPlayer/resource/master/map/' + continentName[ i ] + '/{z}/{y}/{x}.jpg';
@@ -24,6 +28,25 @@ function tileUrlTemplate( i ){
 // 暫定ver 座標コピー用テキスト
 function coord2Json(continent, lat, lng) {
   return "{id:0,c:" + String(continent) + ",lt:" + String(lat / mapLength) + ",ln:" + String(lng / mapLength) + "},";
+}
+
+// 大陸ごとにマーカを切り替える
+function updateMarker( continent ){
+	// 大陸が違うマーカを消す
+	for( var i=0; i<displayedMarker.length; i++){
+		map.removeLayer( displayedMarker[i] );
+	}
+	displayedMarker = [];
+
+	// 新しいマーカを作る
+	for( var i=0; i<markers.length; i++){
+		if( markers[i].c == continent ){
+			var tmp = L.marker( [ markers[i].lt * mapLength, markers[i].ln * mapLength ] );
+			displayedMarker.push( tmp );
+			tmp.addTo( map );
+
+		}
+	}
 }
 
 function init(){
@@ -46,6 +69,7 @@ function init(){
 	tile.setUrl( tileUrlTemplate( continentId ) );
 	tile.addTo( map );
 
+
 	// ズーム方向の都合で、タイルサイズ×2 の座標になっている。
 	map.fitBounds([
 	  [0, 0],
@@ -59,6 +83,7 @@ function init(){
 		coord.value = coord2Json( continentId, evt.latlng.lat, evt.latlng.lng);
 		coord.select();
 		document.execCommand("copy");
+//		for( var i=0; i<mymarker.length; i++)map.removeLayer(mymarker);
 	});
 
 	// 入力チェックしない
@@ -66,8 +91,11 @@ function init(){
 		continentId = continentSelector.value;
 		if( ( continentId >= 0 ) && ( continentId < 3 ) ){
 			tile.setUrl( tileUrlTemplate( continentId ) );
+			updateMarker( continentId );
 		}
 	});
+
+	updateMarker( continentId );
 }
 </script>
 
