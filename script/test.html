@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>入力補助画面</title>
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+
+<script>
+var continentSelector = undefined;
+var continentId = 0;
+var coord = undefined;
+var map = undefined;
+var tile = undefined;
+
+const continentName = ["indar", "amerish", "esamir"];
+const mapLength = 512.; // とりあえずこの値使う
+
+// 動けばよかろうなコード
+function tileUrlTemplate( i ){
+	return 'https://raw.githubusercontent.com/WeakenedPlayer/resource/master/map/' + continentName[ i ] + '/{z}/{y}/{x}.jpg';
+}
+
+// 暫定ver 座標コピー用テキスト
+function coord2Json(continent, lat, lng) {
+  return "{id:0,c:" + String(continent) + ",lt:" + String(lat / mapLength) + ",ln:" + String(lng / mapLength) + "},";
+}
+
+function init(){
+	continentSelector = document.getElementById("continent");
+	continentId = continentSelector.value;
+	coord = document.getElementById("coord");
+
+	map = L.map('map', { crs: L.CRS.Simple });
+
+	tile = L.tileLayer( '', {
+		tileSize: 256,
+		continuousWorld: true, // バグ対策 :  https://github.com/Leaflet/Leaflet/issues/2776
+		attributionControl: false,
+		attribution: 'Indar',
+		zoomReverse: true,
+		minZoom: 0,
+		maxZoom: 4,
+		noWrap: true,
+	});
+	tile.setUrl( tileUrlTemplate( continentId ) );
+	tile.addTo( map );
+
+	// ズーム方向の都合で、タイルサイズ×2 の座標になっている。
+	map.fitBounds([
+	  [0, 0],
+	  [0, 512],
+	  [-512, 512],
+	  [-512, 0]
+	]);
+
+	map.attributionControl.setPrefix("Under construction");
+	map.on('click', function(evt) {
+		coord.value = coord2Json( continentId, evt.latlng.lat, evt.latlng.lng);
+		coord.select();
+		document.execCommand("copy");
+	});
+
+	// 入力チェックしない
+	continentSelector.addEventListener('change', function(evt) {
+		continentId = continentSelector.value;
+		if( ( continentId >= 0 ) && ( continentId < 3 ) ){
+			tile.setUrl( tileUrlTemplate( continentId ) );
+		}
+	});
+}
+</script>
+
+<style>
+
+#coord-box {
+  position: absolute;
+  right: 0px;
+  z-index: 1;
+}
+
+#map {
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+}
+</style>
+</head>
+<body onload="init()">
+	<div id="coord-box">
+	  <select id="continent">
+	    <option value="0">Indar</option>
+	    <option value="1">Amerish</option>
+	    <option value="2">Esamir</option>
+	  </select>
+	  <input id="coord" value="地図上の点をクリック" size="40">
+	</div>
+	<div id="map"></div>
+</body>
+</html>
