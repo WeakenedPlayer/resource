@@ -14,8 +14,9 @@ var continentId = 0;
 var coord = undefined;
 var map = undefined;
 var tile = undefined;
+var currentMarker = undefined;
 
-const continentName = ["indar", "amerish", "esamir"];
+const continentName = ["indar", "amerish", "esamir", "hossin" ];
 const mapLength = 512.; // とりあえずこの値使う
 
 var displayedMarker = [];
@@ -83,13 +84,17 @@ function init(){
 		coord.value = coord2Json( continentId, evt.latlng.lat, evt.latlng.lng);
 		coord.select();
 		document.execCommand("copy");
-//		for( var i=0; i<mymarker.length; i++)map.removeLayer(mymarker);
+		if( currentMarker ){
+			map.removeLayer( currentMarker );
+		}
+		currentMarker = L.marker( [ evt.latlng.lat, evt.latlng.lng ] );
+		currentMarker.addTo( map );
 	});
 
 	// 入力チェックしない
 	continentSelector.addEventListener('change', function(evt) {
 		continentId = continentSelector.value;
-		if( ( continentId >= 0 ) && ( continentId < 3 ) ){
+		if( ( continentId >= 0 ) && ( continentId < continentName.length ) ){
 			tile.setUrl( tileUrlTemplate( continentId ) );
 			updateMarker( continentId );
 		}
@@ -120,6 +125,7 @@ function init(){
 	    <option value="0">Indar</option>
 	    <option value="1">Amerish</option>
 	    <option value="2">Esamir</option>
+	    <option value="3">Hossin</option>
 	  </select>
 	  <input id="coord" value="地図上の点をクリック" size="40">
 	</div>
